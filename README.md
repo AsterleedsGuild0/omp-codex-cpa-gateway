@@ -4,6 +4,15 @@ OMP 扩展：让内置 `openai-codex` provider 的对话和 `/live` 语音都走
 
 保留 `openai-codex` 这个 provider，模型的上下文窗口、兼容设置、Codex 网页搜索、服务档位等内置配置随 OMP 更新，无需在 `models.yml` 中逐个模型手写。
 
+> [!NOTE]
+> **已归档（2026-10-28）**：仓库转为只读，不再维护，也不接受 PR，作者暂时不使用 `/live` 语音。最后验证于 OMP 18.13.3（Tern 0.9.6 附带）和 CLIProxyAPI 8.0.44，对话地址覆盖和 `/live` 转接均可用。停止维护的原因：
+>
+> - `/live` 转接依赖 OMP 内部实现，升级后可能随时失效。
+> - OMP 的 `/live` 把语音层写死为 `gpt-live-1-codex`，即第一代 GPT-Live；OpenAI 已推出后继的 GPT-Live-1.1。需要推理或调用工具时，语音层还要等当前会话的主模型跑完一整轮才能回答，实际使用时反应偏慢。
+> - Tern 的 Carly 助手以 `--no-extensions` 启动；从 Tern 0.9.6 起，Carly 找 omp 不再经过 PATH，原先替换 `~/.local/bin/omp` 的适配办法很可能已失效，因此已删除该适配。
+>
+> 需要时可以 fork 继续使用。
+
 ## 功能
 
 - **对话地址覆盖**：设置 `CODEX_CPA_BASE_URL` 后，会话启动时把 `openai-codex` 的地址覆盖为该值。只修改运行时配置，不写回 `models.yml`。
@@ -21,7 +30,7 @@ OMP 扩展：让内置 `openai-codex` provider 的对话和 `/live` 语音都走
 
 ## 要求
 
-- 已验证版本：OMP 18.13.2、CLIProxyAPI 8.0.44。CPA 需提供 `/v1/live`，并配置可用的 Codex OAuth 账号。
+- 已验证版本：OMP 18.13.2、18.13.3，CLIProxyAPI 8.0.44。CPA 需提供 `/v1/live`，并配置可用的 Codex OAuth 账号。
 - `openai-codex` 已在 `models.yml` 中接到 CPA，例如：
 
 ```yaml
@@ -72,33 +81,6 @@ export CODEX_CPA_LIVE_BACKUP_KEY="$MY_REMOTE_CPA_KEY"
 # 临时把对话切到另一台 CPA
 omp-remote() { CODEX_CPA_BASE_URL="$MY_REMOTE_CPA_URL" omp "$@"; }
 ```
-
-## Tern Carly（macOS，可选）
-
-Tern 的助手 Carly（双击 `⌘` 唤起）在后台运行一个 omp 进程，但有两点和终端里的 omp 不同：
-
-- 启动参数固定带 `--no-extensions`，自动发现和 `config.yml` 中的 `extensions` 都不会加载本扩展，`/live` 会报 `No Codex OAuth credential is available for a live call.`。
-- 进程继承的是 macOS 图形界面的环境，读不到 `.zshrc` 等 shell 配置里的变量。`models.yml` 中以环境变量名配置的 CPA Key 会解析失败，文字对话也会被 CPA 以 `Invalid API key` 拒绝。
-
-`tern/` 目录提供适配：
-
-1. 把 CPA 相关变量（`models.yml` 用到的 Key 以及 `CODEX_CPA_LIVE_*`）用 sh 语法写进 `~/.config/codex-cpa-gateway/env`，权限设为 `0600`，并在 shell 配置中读取它，保持一个来源：
-
-   ```zsh
-   [ -r "$HOME/.config/codex-cpa-gateway/env" ] && . "$HOME/.config/codex-cpa-gateway/env"
-   ```
-
-2. 安装启动脚本：
-
-   ```sh
-   ~/.omp/agent/extensions/codex-cpa-gateway/tern/carly-launcher.sh install
-   ```
-
-   该命令把 Tern 管理的 `~/.local/bin/omp` 软链接换成 `tern/omp-launcher.sh`，原链接目标备份到 `~/.config/codex-cpa-gateway/omp-link.backup`。启动脚本只在参数中含 Carly 会话目录（`/Tern/carly/`）时读取环境文件，并以 `-e` 显式加载本扩展；其他调用原样转发给 Tern 管理的 omp，不读取环境文件，因此不会覆盖 shell 启动函数临时设置的变量。
-
-3. 退出并重新打开 Tern，或结束正在运行的 Carly omp 进程，让 Carly 以新方式启动。
-
-`carly-launcher.sh status` 查看是否已安装，`carly-launcher.sh uninstall` 恢复原软链接。Tern 更新 omp 时可能重建 `~/.local/bin/omp`；如果 Carly 又出现上述报错，先用 `status` 检查，再重新 `install`。环境文件的路径可用 `CODEX_CPA_ENV_FILE` 覆盖，但 Carly 进程本身读不到 shell 中设置的这个变量，Carly 场景下请使用默认路径。
 
 ## 限制
 
