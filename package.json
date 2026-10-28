@@ -1,0 +1,10 @@
+{
+  "name": "codex-cpa-gateway",
+  "version": "0.1.0",
+  "description": "把 OMP 内置 openai-codex 的对话与 /live 语音接到 CLIProxyAPI（CPA），语音支持主备渠道",
+  "private": true,
+  "type": "module",
+  "omp": {
+    "extensions": ["./index.ts"]
+  }
+}
