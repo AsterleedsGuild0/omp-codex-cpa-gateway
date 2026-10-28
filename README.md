@@ -7,7 +7,7 @@ OMP 扩展：让内置 `openai-codex` provider 的对话和 `/live` 语音都走
 ## 功能
 
 - **对话地址覆盖**：设置 `CODEX_CPA_BASE_URL` 后，会话启动时把 `openai-codex` 的地址覆盖为该值。只修改运行时配置，不写回 `models.yml`。
-- **`/live` 转接**：OMP 的 `/live` 固定连接官方 Codex 并要求 OAuth。扩展在进程内把建立通话请求改发到 CPA 的 `/v1/live`，把事件通道改连 `/v1/live/{callId}`，并用 CPA Key 认证，因此不需要官方 OAuth 登录。
+- **`/live` 转接**：OMP 的 `/live` 固定连接官方 Codex 并要求 OAuth。扩展在进程内把建立通话请求改发到 CPA 的 `/v1/live`，把事件通道改连 `/v1/live/{callId}`，并用 CPA Key 认证，因此不需要官方 OAuth 登录。即使登录了官方 Codex OAuth，只要配置了主渠道，`/live` 仍走 CPA，OAuth token 不会发出。
 - **语音主备**：建立通话时先使用主渠道，按下表处理失败。
 
 | 主渠道结果 | 处理 |
@@ -35,8 +35,10 @@ providers:
 ## 安装
 
 ```sh
-git clone <本仓库地址> ~/.omp/agent/extensions/codex-cpa-gateway
+git clone https://github.com/AsterleedsGuild0/omp-codex-cpa-gateway.git ~/.omp/agent/extensions/codex-cpa-gateway
 ```
+
+Windows PowerShell 将目标路径换成 `$HOME\.omp\agent\extensions\codex-cpa-gateway`。
 
 OMP 会自动加载 `~/.omp/agent/extensions/` 下的扩展。如果 `~/.omp` 本身是 Git 仓库，且 `.gitignore` 忽略了该目录，自动发现会跳过它，需要在 `~/.omp/agent/config.yml` 中显式加载：
 
@@ -85,3 +87,7 @@ bun test
 ```
 
 测试覆盖渠道选择、冷却解析和失败分类（`channels.ts`）。网络改写部分需要在隔离的 OMP 中实际运行 `/live` 验证。
+
+## 许可证
+
+[MIT](LICENSE)

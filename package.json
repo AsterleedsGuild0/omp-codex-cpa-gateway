@@ -4,6 +4,11 @@
   "description": "把 OMP 内置 openai-codex 的对话与 /live 语音接到 CLIProxyAPI（CPA），语音支持主备渠道",
   "private": true,
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AsterleedsGuild0/omp-codex-cpa-gateway.git"
+  },
   "omp": {
     "extensions": ["./index.ts"]
   }
